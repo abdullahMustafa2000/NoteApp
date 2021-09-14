@@ -17,7 +17,13 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     List<NoteModel> noteModelList;
 
-    public MyAdapter(List<NoteModel> noteModelList) {
+    private OnRVItemClickListener onRVItemClickListener;
+
+    public void setOnRVItemClickListener(OnRVItemClickListener onRVItemClickListener) {
+        this.onRVItemClickListener = onRVItemClickListener;
+    }
+
+    public void setNoteModelList(List<NoteModel> noteModelList) {
         this.noteModelList = noteModelList;
     }
 
@@ -30,12 +36,22 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
+        NoteModel noteModel = noteModelList.get(position);
         holder.noteTv.setText(noteModelList.get(position).getText());
+        if (onRVItemClickListener != null)
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    onRVItemClickListener.onClickOnItem(noteModel);
+                }
+            });
     }
 
     @Override
     public int getItemCount() {
+        if (noteModelList != null)
         return noteModelList.size();
+        return 0;
     }
 
     public static class MyViewHolder extends RecyclerView.ViewHolder {
@@ -46,4 +62,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.MyViewHolder> {
         }
     }
 
+    public interface OnRVItemClickListener {
+        void onClickOnItem(NoteModel noteModel);
+    }
 }

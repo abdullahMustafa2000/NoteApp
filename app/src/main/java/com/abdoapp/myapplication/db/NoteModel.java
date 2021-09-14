@@ -1,6 +1,7 @@
 package com.abdoapp.myapplication.db;
 
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "note_table")
@@ -11,6 +12,15 @@ public class NoteModel {
 
     @PrimaryKey(autoGenerate = true)
     public int id;
+
+    public NoteModel() {
+    }
+
+    @Ignore
+    public NoteModel(String title, String text) {
+        this.title = title;
+        this.text = text;
+    }
 
     @Override
     public String toString() {
