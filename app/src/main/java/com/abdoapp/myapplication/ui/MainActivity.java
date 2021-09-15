@@ -22,9 +22,12 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.core.ObservableEmitter;
 import io.reactivex.rxjava3.core.ObservableOnSubscribe;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.core.SingleEmitter;
+import io.reactivex.rxjava3.core.SingleOnSubscribe;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity {
 
     MyAdapter adapter;
     FloatingActionButton fab;
@@ -43,10 +46,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         //here we will set our list
 
-        adapter = new MyAdapter();
+        adapter = new MyAdapter(this);
         recyclerView.setAdapter(adapter);
 
         getList();
+
+
+        adapter.setOnRVItemClickListener(new MyAdapter.OnRVItemClickListener() {
+            @Override
+            public void onClickOnItem(NoteModel noteModel) {
+                Log.d("TAG", "onClickOnItem: abdo "+ noteModel.getTitle());
+            }
+        });
+
+        adapter.setOnDeleteItemClickListener(new MyAdapter.OnDeleteItemClickListener() {
+            @Override
+            public void onClickOnItem(NoteModel noteModel) {
+                NoteDao dao = DatabaseManager.getInstance(MainActivity.this).noteDao();
+
+                Single.create(new SingleOnSubscribe<NoteModel>() {
+                    @Override
+                    public void subscribe(@NonNull SingleEmitter<NoteModel> emitter) throws Throwable {
+                        emitter.onSuccess(noteModel);
+                    }
+                })
+                        .observeOn(Schedulers.io())
+                        .subscribeOn(Schedulers.io())
+                        .subscribe(o -> dao.delete(o));
+            }
+        });
+
+
         adapter.setOnRVItemClickListener(new MyAdapter.OnRVItemClickListener() {
             @Override
             public void onClickOnItem(NoteModel noteModel) {
@@ -66,16 +96,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void getList() {
         NoteDao dao = DatabaseManager.getInstance(this).noteDao();
         dao.getAllNotes()
-                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
                 .subscribe(list -> {
                     adapter.setNoteModelList(list);
                     adapter.notifyDataSetChanged();
                 });
     }
 
-    @Override
-    public void onClick(View view) {
-
-    }
 }
